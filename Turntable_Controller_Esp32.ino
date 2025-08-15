@@ -11,7 +11,7 @@ U8X8_SH1106_128X64_NONAME_HW_I2C u8x8(U8X8_PIN_NONE);
 ESP32Encoder encoder;
 
 #include "OneButton.h"
-OneButton RotateButton(4, true);
+OneButton RotateButton(26, true);
 
 #include <AccelStepper.h>
 AccelStepper stepper(AccelStepper::DRIVER, 13, 14); // step pin, direction pin
@@ -19,15 +19,23 @@ AccelStepper stepper(AccelStepper::DRIVER, 13, 14); // step pin, direction pin
 #include <Preferences.h> // permanent data storage
 Preferences prefs;
 
+// Define the track positions
+
+//  #define ArraySize 2
+//  String TrackPosition[ArraySize] = {"A1", "B1"};
+//  int TrackSteps[ArraySize] = {0, 4800}; // default values if none are saved to eeprom
+
+  #define ArraySize 8
+  String TrackPosition[ArraySize] = {"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4"};
+  int TrackSteps[ArraySize] = {0, 250, 550, 850, 4800, 5050, 5350, 5650}; // default values if none are saved to eeprom
+
+  int RetrieveSteps[ArraySize];
+
 // Define the stepper motor enable pin
-const int enablePin = 5;
+const int enablePin = 27;
 
 #define RotateLimitSwitch 18
-#define AutoReverse 19
-
-String TrackPosition[8] = {"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4"};
-int RetrieveSteps[8];
-int TrackSteps[8] = {0, 250, 550, 850, 4800, 5050, 5350, 5650}; // default values if none are saved to eeprom
+#define AutoReverse 23
 
 int RetrievedHomeSteps;
 int PreSetSteps;
@@ -213,7 +221,7 @@ void SaveSteps(){
 void TurntableMove(){
     NewPosition = encoder.getCount() / 2;
     if(NewPosition != OldPosition){
-      if(NewPosition == 8 || NewPosition == -1){
+      if(NewPosition == ArraySize || NewPosition == -1){
         encoder.clearCount();
         OldPosition = 0;
         NewPosition = 0;
@@ -294,7 +302,7 @@ void setup() {
 
 // retrieve the stored track positions and create the TrackSteps array
   prefs.getBytes("SavedArray", &RetrieveSteps, sizeof(RetrieveSteps));
-  for(int i=0; i<8; i++){
+  for(int i=0; i<ArraySize; i++){
     if(RetrieveSteps[i] != 0){
       TrackSteps[i] = RetrieveSteps[i];
       }
@@ -316,7 +324,7 @@ void setup() {
 
   u8x8.begin();
 
-  encoder.attachHalfQuad ( 26, 27 );
+  encoder.attachHalfQuad ( 25, 33 );
   encoder.setCount ( 0 );
   
 // Home the turntable
